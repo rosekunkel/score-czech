@@ -4,6 +4,9 @@ extern crate iron;
 extern crate router;
 extern crate rand;
 
+#[macro_use]
+extern crate lazy_static;
+
 use std::fmt;
 use iron::prelude::*;
 use iron::{status, headers};
@@ -29,11 +32,11 @@ impl<'a> fmt::Display for Czech<'a> {
 
 impl<'a> rand::Rand for Czech<'a> {
     fn rand<R: rand::Rng>(rng: &mut R) -> Czech<'static> {
-        let names = ["Lída Baarová",
-                     "Jan Santini Aichel",
-                     "Michal Ajvaz",
-                     "Ivana Christová"];
-        Czech::new(rng.choose(&names).unwrap())
+        lazy_static! {
+            static ref NAMES: Vec<&'static str> =
+                include_str!("../resources/czechs").lines().collect();
+        }
+        Czech::new(rng.choose(&NAMES).unwrap())
     }
 }
 

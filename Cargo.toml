@@ -7,3 +7,4 @@ authors = ["William Kunkel <will@wkunkel.com>"]
 iron = "*"
 router = "*"
 rand = "*"
+lazy_static = "*"
