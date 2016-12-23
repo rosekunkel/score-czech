@@ -1,13 +1,17 @@
 extern crate iron;
 
+#[macro_use(router)]
+extern crate router;
+
 use iron::prelude::*;
 use iron::status;
 
 fn main() {
-    fn hello_world(_: &mut Request) -> IronResult<Response> {
-        Ok(Response::with((status::Ok, "Hello World!")))
+    let router = router!(random: get "/random" => handle_random);
+
+    fn handle_random(_: &mut Request) -> IronResult<Response> {
+        Ok(Response::with((status::Ok, "A random Czech.")))
     }
 
-    Iron::new(hello_world).http("localhost:3000").unwrap();
-    println!("On 3000");
+    Iron::new(router).http("localhost:3000").unwrap();
 }

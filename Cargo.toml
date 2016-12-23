@@ -5,3 +5,4 @@ authors = ["William Kunkel <will@wkunkel.com>"]
 
 [dependencies]
 iron = "*"
+router = "*"
