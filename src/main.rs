@@ -11,7 +11,7 @@ extern crate serde_json;
 
 use std::fmt;
 use iron::prelude::*;
-use iron::{status, headers};
+use iron::{Url, status, headers, modifiers};
 use hyper::client;
 use serde_json::Value;
 
@@ -93,8 +93,11 @@ fn main() {
     let router = router!(random: get "/random" => handle_random);
 
     fn handle_random(_: &mut Request) -> IronResult<Response> {
+        let czech = rand::random::<Czech>();
+        let url = Url::parse(&format!("https://en.wikipedia.org/wiki/{}",
+                                     czech)).unwrap();
         let mut response =
-            Response::with((status::Ok, rand::random::<Czech>().to_string()));
+            Response::with((status::SeeOther, modifiers::Redirect(url)));
         response.headers.set(headers::ContentType::plaintext());
         Ok(response)
     }
