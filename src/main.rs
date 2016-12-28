@@ -8,7 +8,9 @@ extern crate rand;
 extern crate lazy_static;
 extern crate hyper;
 extern crate serde_json;
+extern crate itertools;
 
+mod wiki_api;
 mod czech;
 
 use std::fmt;

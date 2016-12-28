@@ -1,9 +1,8 @@
 use std::fmt;
-use hyper::{client, header};
 use rand::{Rand, Rng};
 use fmt::Display;
-use serde_json;
 use serde_json::Value;
+use wiki_api::{Query, Client};
 
 #[derive(Debug)]
 pub struct Czech<'a> {
@@ -34,47 +33,30 @@ impl<'a> Rand for Czech<'a> {
 }
 
 fn get_potential_czechs() -> Vec<String> {
-    let client = client::Client::new();
     let mut potential_czechs: Vec<String> = Vec::new();
-    let mut continue_string = Some("&continue=".to_owned());
-    let base_query = "action=query\
-                      &titles=List of Czechs\
-                      &generator=links\
-                      &gpllimit=max\
-                      &prop=templates\
-                      &tllimit=max\
-                      &tltemplates=Template:Infobox person\
-                      &format=json\
-                      &formatversion=2\
-                      &redirects";
-    while continue_string.is_some() {
-        let request_string = format!("https://en.wikipedia.org/w/api.php?{}{}",
-                                     base_query, continue_string.unwrap());
-        let response = client
-            .get(&request_string)
-            .header(header::UserAgent("ScoreCzech/0.1.0 (will@wkunkel.com)".to_owned()))
-            .send().unwrap();
-        let data: Value = serde_json::from_reader(response).unwrap();
-        let pages = data.pointer("/query/pages").and_then(Value::as_array);
-        if pages.is_some() {
-            let people = pages.unwrap().into_iter()
+    let mut query = Query::new();
+    query
+        .add_param("titles", "List of Czechs")
+        .add_param("generator", "links")
+        .add_param("gpllimit", "max")
+        .add_param("prop", "templates")
+        .add_param("tllimit", "max")
+        .add_param("tltemplates", "Template:Infobox person")
+        .add_flag("redirects");
+
+    Client::new().query(&query, |data| {
+        if let Some(pages) = data
+            .pointer("/query/pages")
+            .and_then(Value::as_array) {
+            let people = pages.iter()
                 .filter(|v| v.pointer("/templates").is_some())
-                .map(|v| v.pointer("/title"))
-                .map(|v| v.and_then(Value::as_str))
-                .map(Option::unwrap)
-                .map(Into::into);
+                .map(|v| v.pointer("/title")
+                     .and_then(Value::as_str)
+                     .unwrap()
+                     .to_string());
             potential_czechs.extend(people);
         }
+    });
 
-        continue_string = data
-            .pointer("/continue")
-            .and_then(Value::as_object)
-            .map(|o| o.into_iter()
-                 .map(|(k, v)| format!("&{}={}", k, v.as_str().unwrap()))
-                 .fold(String::new(), |mut a, e| {
-                     a.push_str(&e);
-                     a
-                 }));
-    }
     potential_czechs
 }
